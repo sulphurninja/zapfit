@@ -1,7 +1,13 @@
 {
+  "buildCommand": "npm run build",
   "functions": {
     "app/**": {
       "includeFiles": "node_modules/lightningcss/**"
+    }
+  },
+  "build": {
+    "env": {
+      "NEXT_TELEMETRY_DISABLED": "1"
     }
   }
 }
