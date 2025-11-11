@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ZapFit OS - Gym Management System",
-  description: "Complete gym management platform with CRM, billing, attendance tracking, and WhatsApp automation for Indian fitness businesses",
+  title: "GymZ - Your Fitness Operating System",
+  description: "GymZ isn't another management tool — it's your complete fitness OS. Built by Zapllo. Perfected for gyms. The future of fitness management.",
 };
 
 export default function RootLayout({
