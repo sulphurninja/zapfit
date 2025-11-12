@@ -8,7 +8,7 @@ const journeySteps = [
   {
     icon: Clock,
     number: '01',
-    title: 'You're drowning in admin work',
+    title: 'You are drowning in admin work',
     problem: 'Spreadsheets. Paper forms. Chasing payments. Following up on renewals.',
     solution: 'What if all of that... just happened automatically?',
     gradient: 'from-red-500 to-orange-500'
@@ -16,7 +16,7 @@ const journeySteps = [
   {
     icon: Heart,
     title: 'You started this to change lives',
-    problem: 'But you're stuck managing schedules instead of coaching members.',
+    problem: 'But you are stuck managing schedules instead of coaching members.',
     solution: 'Imagine having time to do what you love again.',
     gradient: 'from-purple-500 to-pink-500'
   },
@@ -24,7 +24,7 @@ const journeySteps = [
     icon: Rocket,
     title: 'You want to grow',
     problem: 'But scaling feels impossible with your current systems.',
-    solution: 'Growth shouldn't mean more chaos. It should mean more impact.',
+    solution: 'Growth should not mean more chaos. It should mean more impact.',
     gradient: 'from-blue-500 to-cyan-500'
   },
   {
