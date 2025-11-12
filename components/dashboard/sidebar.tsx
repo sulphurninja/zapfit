@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -14,27 +15,32 @@ import {
   FileText,
   Settings,
   Building2,
+  Sparkles,
+  Fingerprint,
+  ChevronLeft,
   ChevronRight,
 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Button } from '@/components/ui/button'
 
 const navigation = [
   {
     name: 'Dashboard',
     href: '/dashboard',
     icon: LayoutDashboard,
-    description: 'Overview & Stats',
+    description: 'Overview',
   },
   {
     name: 'Members',
     href: '/dashboard/members',
     icon: Users,
-    description: 'Member Management',
+    description: 'Manage',
   },
   {
     name: 'Leads',
     href: '/dashboard/leads',
     icon: UserPlus,
-    description: 'CRM & Pipeline',
+    description: 'Pipeline',
   },
   {
     name: 'Attendance',
@@ -43,16 +49,22 @@ const navigation = [
     description: 'Check-ins',
   },
   {
+    name: 'Biometric',
+    href: '/dashboard/biometric',
+    icon: Fingerprint,
+    description: 'Fingerprints',
+  },
+  {
     name: 'Billing',
     href: '/dashboard/billing',
     icon: CreditCard,
-    description: 'Payments & Revenue',
+    description: 'Revenue',
   },
   {
     name: 'Trainers',
     href: '/dashboard/trainers',
     icon: Dumbbell,
-    description: 'Staff Management',
+    description: 'Staff',
   },
   {
     name: 'WhatsApp',
@@ -64,7 +76,7 @@ const navigation = [
     name: 'Plans',
     href: '/dashboard/plans',
     icon: Building2,
-    description: 'Membership Plans',
+    description: 'Plans',
   },
   {
     name: 'Reports',
@@ -74,31 +86,86 @@ const navigation = [
   },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  onCollapse?: (collapsed: boolean) => void
+}
+
+export function Sidebar({ onCollapse }: SidebarProps = {}) {
   const pathname = usePathname()
+  const [collapsed, setCollapsed] = useState(false)
+
+  const handleToggle = () => {
+    const newState = !collapsed
+    setCollapsed(newState)
+    onCollapse?.(newState)
+  }
 
   return (
-    <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
-      <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 px-6 pb-4">
+    <motion.div
+      initial={false}
+      animate={{
+        width: collapsed ? 80 : 288,
+      }}
+      transition={{ duration: 0.3, ease: 'easeInOut' }}
+      className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col relative"
+    >
+      {/* Toggle Button - Outside scrollable container */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleToggle}
+        className={cn(
+          'absolute top-6 -right-3 h-6 w-6 rounded-full bg-background border border-border shadow-md hover:shadow-lg transition-all p-0 z-[9999]',
+          collapsed && 'rotate-180'
+        )}
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </Button>
+
+      <div className="flex grow flex-col gap-y-6 overflow-y-auto bg-card/50 backdrop-blur-xl border-r border-border/50 px-4 pb-6 scrollbar-hide">
         {/* Logo */}
-        <div className="flex h-20 shrink-0 items-center">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <Dumbbell className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                ZapFit OS
-              </h1>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">Gym Management</p>
-            </div>
-          </div>
+        <div className="flex h-20 shrink-0 items-center justify-between">
+          <Link href="/dashboard" className="flex items-center gap-3 group">
+            <motion.div
+              className="p-2 bg-primary/10 rounded-xl group-hover:bg-primary/20 transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Dumbbell className="h-6 w-6 text-primary" />
+            </motion.div>
+            <AnimatePresence>
+              {!collapsed && (
+                <motion.div
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 'auto' }}
+                  exit={{ opacity: 0, width: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <h1 className="text-xl font-bold whitespace-nowrap">GymZ</h1>
+                  <p className="text-xs text-muted-foreground whitespace-nowrap">Fitness OS</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Link>
         </div>
 
         {/* Navigation */}
         <nav className="flex flex-1 flex-col">
-          <ul role="list" className="flex flex-1 flex-col gap-y-7">
+          <ul role="list" className="flex flex-1 flex-col gap-y-8">
             <li>
+              <AnimatePresence>
+                {!collapsed && (
+                  <motion.p
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-3"
+                  >
+                    Main
+                  </motion.p>
+                )}
+              </AnimatePresence>
               <ul role="list" className="space-y-1">
                 {navigation.map((item) => {
                   const isActive = pathname === item.href
@@ -107,31 +174,57 @@ export function Sidebar() {
                       <Link
                         href={item.href}
                         className={cn(
-                          'group flex items-center justify-between gap-x-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200',
+                          'group flex items-center gap-x-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 relative',
                           isActive
-                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/30'
-                            : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-white'
+                            ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                            : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                          collapsed && 'justify-center'
                         )}
+                        title={collapsed ? item.name : undefined}
                       >
-                        <div className="flex items-center gap-x-3">
+                        <motion.div
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
                           <item.icon
                             className={cn(
-                              'h-5 w-5 shrink-0 transition-transform duration-200 group-hover:scale-110',
-                              isActive ? 'text-white' : 'text-zinc-500 dark:text-zinc-400'
+                              'h-5 w-5 shrink-0',
+                              isActive ? 'text-primary-foreground' : 'text-muted-foreground'
                             )}
                             aria-hidden="true"
                           />
-                          <div className="flex flex-col">
-                            <span className="font-semibold">{item.name}</span>
-                            {!isActive && (
-                              <span className="text-xs text-zinc-500 dark:text-zinc-500">
-                                {item.description}
-                              </span>
-                            )}
+                        </motion.div>
+                        <AnimatePresence>
+                          {!collapsed && (
+                            <motion.div
+                              initial={{ opacity: 0, width: 0 }}
+                              animate={{ opacity: 1, width: 'auto' }}
+                              exit={{ opacity: 0, width: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="flex-1 min-w-0 overflow-hidden"
+                            >
+                              <span className="font-medium whitespace-nowrap">{item.name}</span>
+                              {!isActive && (
+                                <span className="block text-xs text-muted-foreground/70 mt-0.5 whitespace-nowrap">
+                                  {item.description}
+                                </span>
+                              )}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                        {isActive && !collapsed && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="w-1.5 h-1.5 rounded-full bg-primary-foreground"
+                          />
+                        )}
+                        {/* Tooltip for collapsed state */}
+                        {collapsed && (
+                          <div className="absolute left-full ml-2 px-3 py-2 bg-popover text-popover-foreground text-sm rounded-lg shadow-lg border border-border opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
+                            <div className="font-medium">{item.name}</div>
+                            <div className="text-xs text-muted-foreground">{item.description}</div>
                           </div>
-                        </div>
-                        {isActive && (
-                          <ChevronRight className="h-4 w-4 text-white" />
                         )}
                       </Link>
                     </li>
@@ -141,56 +234,102 @@ export function Sidebar() {
             </li>
 
             {/* Settings at bottom */}
-            <li className="mt-auto pb-4">
+            <li className="mt-auto">
+              <AnimatePresence>
+                {!collapsed && (
+                  <motion.p
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-3"
+                  >
+                    System
+                  </motion.p>
+                )}
+              </AnimatePresence>
               <Link
                 href="/dashboard/settings"
                 className={cn(
-                  'group flex items-center gap-x-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200',
+                  'group flex items-center gap-x-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 relative',
                   pathname === '/dashboard/settings'
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/30'
-                    : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-white'
+                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                    : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                  collapsed && 'justify-center'
                 )}
+                title={collapsed ? 'Settings' : undefined}
               >
-                <Settings
-                  className={cn(
-                    'h-5 w-5 shrink-0 transition-transform duration-200 group-hover:rotate-90',
-                    pathname === '/dashboard/settings' ? 'text-white' : 'text-zinc-500 dark:text-zinc-400'
+                <motion.div
+                  whileHover={{ rotate: 90 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Settings
+                    className={cn(
+                      'h-5 w-5 shrink-0',
+                      pathname === '/dashboard/settings' ? 'text-primary-foreground' : 'text-muted-foreground'
+                    )}
+                    aria-hidden="true"
+                  />
+                </motion.div>
+                <AnimatePresence>
+                  {!collapsed && (
+                    <motion.div
+                      initial={{ opacity: 0, width: 0 }}
+                      animate={{ opacity: 1, width: 'auto' }}
+                      exit={{ opacity: 0, width: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="flex-1 min-w-0 overflow-hidden"
+                    >
+                      <span className="font-medium whitespace-nowrap">Settings</span>
+                      {pathname !== '/dashboard/settings' && (
+                        <span className="block text-xs text-muted-foreground/70 mt-0.5 whitespace-nowrap">
+                          Preferences
+                        </span>
+                      )}
+                    </motion.div>
                   )}
-                  aria-hidden="true"
-                />
-                <div className="flex flex-col">
-                  <span className="font-semibold">Settings</span>
-                  {pathname !== '/dashboard/settings' && (
-                    <span className="text-xs text-zinc-500 dark:text-zinc-500">
-                      Preferences
-                    </span>
-                  )}
-                </div>
+                </AnimatePresence>
+                {/* Tooltip for collapsed state */}
+                {collapsed && (
+                  <div className="absolute left-full ml-2 px-3 py-2 bg-popover text-popover-foreground text-sm rounded-lg shadow-lg border border-border opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
+                    <div className="font-medium">Settings</div>
+                    <div className="text-xs text-muted-foreground">Preferences</div>
+                  </div>
+                )}
               </Link>
             </li>
           </ul>
         </nav>
 
         {/* Upgrade Card */}
-        <div className="rounded-xl bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 p-4 border border-blue-200 dark:border-blue-900">
-          <div className="flex items-start gap-3">
-            <div className="h-8 w-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shrink-0">
-              <Dumbbell className="h-4 w-4 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-zinc-900 dark:text-white">
-                Starter Plan
-              </p>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5">
-                ₹999/month
-              </p>
-              <button className="mt-2 text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">
-                Upgrade Plan →
-              </button>
-            </div>
-          </div>
-        </div>
+        <AnimatePresence>
+          {!collapsed && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              whileHover={{ y: -2 }}
+              className="rounded-2xl bg-linear-to-br from-primary/10 via-primary/5 to-purple-500/10 p-4 border border-primary/20 cursor-pointer group overflow-hidden"
+            >
+              <div className="flex items-start gap-3">
+                <motion.div
+                  whileHover={{ rotate: 360 }}
+                  transition={{ duration: 0.6 }}
+                  className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-primary/25"
+                >
+                  <Sparkles className="h-5 w-5 text-primary-foreground" />
+                </motion.div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold">Starter Plan</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">₹999/month</p>
+                  <button className="mt-2 text-xs font-medium text-primary group-hover:underline underline-offset-2 transition-all">
+                    Upgrade Plan →
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   )
 }

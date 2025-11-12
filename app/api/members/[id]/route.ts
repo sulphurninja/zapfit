@@ -5,7 +5,7 @@ import { verifyToken } from '@/lib/jwt'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB()
@@ -16,18 +16,25 @@ export async function GET(
     }
 
     const decoded = verifyToken(token)
-    if (!decoded) {
+    if (!decoded || !decoded.organizationId) {
       return NextResponse.json({ success: false, message: 'Invalid token' }, { status: 401 })
     }
 
-    const { id } = await params
-    const member = await Member.findById(id).populate('assignedTrainerId', 'name email')
+    const { id } = await context.params
+
+    const member = await Member.findOne({
+      _id: id,
+      organizationId: decoded.organizationId,
+    }).populate('assignedTrainerId', 'name email')
 
     if (!member) {
       return NextResponse.json({ success: false, message: 'Member not found' }, { status: 404 })
     }
 
-    return NextResponse.json({ success: true, member })
+    return NextResponse.json({
+      success: true,
+      member,
+    })
   } catch (error: any) {
     console.error('Get member error:', error)
     return NextResponse.json(
@@ -37,9 +44,9 @@ export async function GET(
   }
 }
 
-export async function PATCH(
+export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB()
@@ -50,23 +57,57 @@ export async function PATCH(
     }
 
     const decoded = verifyToken(token)
-    if (!decoded) {
+    if (!decoded || !decoded.organizationId) {
       return NextResponse.json({ success: false, message: 'Invalid token' }, { status: 401 })
     }
 
-    const { id } = await params
+    const { id } = await context.params
     const body = await request.json()
+    const { name, email, phone, address, emergencyContact, subscription } = body
 
-    const member = await Member.findByIdAndUpdate(id, body, { new: true, runValidators: true })
+    // Find the member first
+    const existingMember = await Member.findOne({
+      _id: id,
+      organizationId: decoded.organizationId,
+    })
 
-    if (!member) {
+    if (!existingMember) {
       return NextResponse.json({ success: false, message: 'Member not found' }, { status: 404 })
     }
+
+    // Update fields
+    if (name) existingMember.name = name
+    if (email) existingMember.email = email.toLowerCase()
+    if (phone) existingMember.phone = phone
+    if (address !== undefined) existingMember.address = address
+    if (emergencyContact !== undefined) existingMember.emergencyContact = emergencyContact
+
+    // Update subscription if provided
+    if (subscription) {
+      if (subscription.planName) existingMember.subscription.planName = subscription.planName
+      if (subscription.amount) existingMember.subscription.amount = subscription.amount
+      if (subscription.startDate) existingMember.subscription.startDate = new Date(subscription.startDate)
+      if (subscription.status) existingMember.subscription.status = subscription.status
+      
+      // Recalculate end date if start date changed
+      if (subscription.startDate && existingMember.subscription.endDate) {
+        const duration = Math.floor(
+          (new Date(existingMember.subscription.endDate).getTime() - 
+           new Date(existingMember.subscription.startDate).getTime()) / 
+          (1000 * 60 * 60 * 24)
+        )
+        const newEndDate = new Date(subscription.startDate)
+        newEndDate.setDate(newEndDate.getDate() + duration)
+        existingMember.subscription.endDate = newEndDate
+      }
+    }
+
+    await existingMember.save()
 
     return NextResponse.json({
       success: true,
       message: 'Member updated successfully',
-      member,
+      member: existingMember,
     })
   } catch (error: any) {
     console.error('Update member error:', error)
@@ -79,7 +120,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB()
@@ -90,16 +131,16 @@ export async function DELETE(
     }
 
     const decoded = verifyToken(token)
-    if (!decoded) {
+    if (!decoded || !decoded.organizationId) {
       return NextResponse.json({ success: false, message: 'Invalid token' }, { status: 401 })
     }
 
-    const { id } = await params
-    const member = await Member.findByIdAndUpdate(
-      id,
-      { isActive: false },
-      { new: true }
-    )
+    const { id } = await context.params
+
+    const member = await Member.findOneAndDelete({
+      _id: id,
+      organizationId: decoded.organizationId,
+    })
 
     if (!member) {
       return NextResponse.json({ success: false, message: 'Member not found' }, { status: 404 })
@@ -107,7 +148,7 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: 'Member deactivated successfully',
+      message: 'Member deleted successfully',
     })
   } catch (error: any) {
     console.error('Delete member error:', error)
@@ -117,4 +158,3 @@ export async function DELETE(
     )
   }
 }
-

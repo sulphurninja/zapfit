@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import connectDB from '@/lib/mongodb'
-import Member from '@/models/Member'
+import Trainer from '@/models/Trainer'
 import User from '@/models/User'
+import Member from '@/models/Member'
 import { verifyToken } from '@/lib/jwt'
 
 export async function GET(request: NextRequest) {
@@ -19,40 +20,43 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const status = searchParams.get('status')
     const search = searchParams.get('search')
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
+    const limit = parseInt(searchParams.get('limit') || '100')
 
     const query: any = { organizationId: decoded.organizationId }
-
-    if (status) {
-      query['subscription.status'] = status
-    }
 
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } },
         { phone: { $regex: search, $options: 'i' } },
-        { membershipNumber: { $regex: search, $options: 'i' } },
       ]
     }
 
     const skip = (page - 1) * limit
 
-    const [members, total] = await Promise.all([
-      Member.find(query)
+    const [trainers, total] = await Promise.all([
+      Trainer.find(query)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .populate('assignedTrainerId', 'name email'),
-      Member.countDocuments(query),
+        .populate('assignedMembers', 'name email'),
+      Trainer.countDocuments(query),
     ])
+
+    // Calculate stats
+    const stats = {
+      total: total,
+      activeTrainers: trainers.filter((t) => t.isActive).length,
+      totalClients: trainers.reduce((sum, t) => sum + t.assignedMembers.length, 0),
+      avgRating: trainers.reduce((sum, t) => sum + (t.rating || 0), 0) / (trainers.length || 1),
+    }
 
     return NextResponse.json({
       success: true,
-      members,
+      trainers,
+      stats,
       pagination: {
         total,
         page,
@@ -61,9 +65,9 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error: any) {
-    console.error('Get members error:', error)
+    console.error('Get trainers error:', error)
     return NextResponse.json(
-      { success: false, message: error.message || 'Failed to fetch members' },
+      { success: false, message: error.message || 'Failed to fetch trainers' },
       { status: 500 }
     )
   }
@@ -88,80 +92,56 @@ export async function POST(request: NextRequest) {
       name,
       email,
       phone,
-      dateOfBirth,
-      gender,
-      address,
-      planId,
-      planName,
-      planDuration,
-      amount,
-      assignedTrainerId,
-      emergencyContact,
-      healthInfo,
-      startDate: startDateStr,
+      password,
+      specialization,
+      certifications,
+      experience,
+      bio,
+      commissionRate,
     } = body
 
     // Check if user already exists
     let user = await User.findOne({ email: email.toLowerCase() })
-    
+
     if (!user) {
-      // Create user account for member
+      // Create user account for trainer
       user = await User.create({
         name,
         email: email.toLowerCase(),
-        password: phone.slice(-6), // Default password is last 6 digits of phone
+        password: password || phone.slice(-6), // Default password is last 6 digits of phone
         phone,
-        role: 'member',
+        role: 'trainer',
         organizationId: decoded.organizationId,
       })
     }
 
-    // Calculate subscription dates
-    const startDate = startDateStr ? new Date(startDateStr) : new Date()
-    const endDate = new Date(startDate)
-    endDate.setDate(endDate.getDate() + parseInt(planDuration || '30'))
-
-    // Create a dummy planId if not provided (for backward compatibility)
-    const mongoose = require('mongoose')
-    const subscriptionPlanId = planId || new mongoose.Types.ObjectId()
-
-    // Create member
-    const member = await Member.create({
+    // Create trainer profile
+    const trainer = await Trainer.create({
       userId: user._id,
       organizationId: decoded.organizationId,
       name,
       email: email.toLowerCase(),
       phone,
-      dateOfBirth,
-      gender,
-      address,
-      subscription: {
-        planId: subscriptionPlanId,
-        planName,
-        startDate,
-        endDate,
-        amount: parseFloat(amount),
-        status: 'active',
-        autoRenewal: false,
-      },
-      assignedTrainerId,
-      emergencyContact,
-      healthInfo,
-      joinDate: startDate,
+      specialization: specialization || [],
+      certifications: certifications || [],
+      experience: experience || 0,
+      bio,
+      commissionRate: commissionRate || 0,
+      assignedMembers: [],
     })
 
     return NextResponse.json(
       {
         success: true,
-        message: 'Member created successfully',
-        member,
+        message: 'Trainer created successfully',
+        trainer,
       },
       { status: 201 }
     )
   } catch (error: any) {
-    console.error('Create member error:', error)
+    console.error('Create trainer error:', error)
     return NextResponse.json(
-      { success: false, message: error.message || 'Failed to create member' },
+      { success: false, message: error.message || 'Failed to create trainer' },
       { status: 500 }
     )
   }

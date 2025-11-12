@@ -1,8 +1,8 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { verifyToken } from '@/lib/jwt'
-import { Sidebar } from '@/components/dashboard/sidebar'
-import { Header } from '@/components/dashboard/header'
+import { DashboardWrapper } from '@/components/dashboard/dashboard-wrapper'
+import { Toaster } from 'sonner'
 
 async function getCurrentUser() {
   const cookieStore = await cookies()
@@ -28,21 +28,18 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-      <Sidebar />
-      <div className="lg:pl-72">
-        <Header
-          user={{
-            name: user.email.split('@')[0],
-            email: user.email,
-            role: user.role,
-          }}
-        />
-        <main className="py-8">
-          <div className="px-4 sm:px-6 lg:px-8">{children}</div>
-        </main>
-      </div>
-    </div>
+    <>
+      <Toaster position="top-right" richColors />
+      <DashboardWrapper
+        user={{
+          name: user.email.split('@')[0],
+          email: user.email,
+          role: user.role,
+        }}
+      >
+        {children}
+      </DashboardWrapper>
+    </>
   )
 }
 

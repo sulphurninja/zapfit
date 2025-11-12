@@ -57,8 +57,8 @@ const MemberSchema = new Schema<IMember>(
     },
     membershipNumber: {
       type: String,
-      required: true,
       unique: true,
+      sparse: true, // Allows null/undefined before pre-save hook generates it
     },
     name: {
       type: String,
@@ -151,8 +151,14 @@ const MemberSchema = new Schema<IMember>(
 // Generate unique membership number
 MemberSchema.pre('save', async function (next) {
   if (!this.membershipNumber) {
-    const count = await mongoose.model('Member').countDocuments({ organizationId: this.organizationId })
-    this.membershipNumber = `MEM${String(count + 1).padStart(6, '0')}`
+    try {
+      const count = await this.model('Member').countDocuments({ organizationId: this.organizationId })
+      this.membershipNumber = `MEM${String(count + 1).padStart(6, '0')}`
+    } catch (error) {
+      console.error('Error generating membership number:', error)
+      // Fallback to timestamp-based if counting fails
+      this.membershipNumber = `MEM${Date.now().toString().slice(-6)}`
+    }
   }
   next()
 })

@@ -45,7 +45,7 @@ export function HeroRevamped() {
         }}
       />
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-32 relative z-10">
         <div className="max-w-5xl mx-auto">
           {/* Badge with animation */}
           <motion.div
