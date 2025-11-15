@@ -1,5 +1,6 @@
 'use client'
 
+import { TopBar } from '@/components/landing/top-bar'
 import { Header } from '@/components/landing/header'
 import { Footer } from '@/components/landing/footer'
 import { motion } from 'framer-motion'
@@ -14,19 +15,19 @@ const contactMethods = [
   {
     icon: Phone,
     title: 'Sales Inquiries',
-    details: ['+91 77108 62007', 'sales@gymz.online'],
+    details: ['+91 9836630366', 'sales@gymz.in'],
     description: 'Talk to our sales team about plans and pricing'
   },
   {
     icon: MessageSquare,
     title: 'Customer Support',
-    details: ['+91 82916 82083', 'support@gymz.online'],
+    details: ['+91 9836630366', 'support@gymz.in'],
     description: 'Get help with your existing account'
   },
   {
     icon: MapPin,
     title: 'Visit Us',
-    details: ['Swami Vivekanand Road', 'Jogeshwari West, Mumbai - 400 102'],
+    details: [''],
     description: 'Come visit our office'
   }
 ]
@@ -34,6 +35,7 @@ const contactMethods = [
 export default function ContactPage() {
   return (
     <div className="min-h-screen bg-background">
+      <TopBar />
       <Header />
       
       <main>

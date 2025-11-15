@@ -1,3 +1,4 @@
+import { TopBar } from '@/components/landing/top-bar'
 import { Header } from '@/components/landing/header'
 import { Hero } from '@/components/landing/hero'
 import { QuoteSection } from '@/components/landing/quote'
@@ -17,6 +18,7 @@ import { PricingRevamped } from '@/components/landing/pricing-revamped'
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
+      <TopBar />
       <Header />
       <main>
         <HeroRevamped />

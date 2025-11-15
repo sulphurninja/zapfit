@@ -1,5 +1,6 @@
 'use client'
 
+import { TopBar } from '@/components/landing/top-bar'
 import { Header } from '@/components/landing/header'
 import { Footer } from '@/components/landing/footer'
 import { motion } from 'framer-motion'
@@ -40,6 +41,7 @@ const stats = [
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-background">
+      <TopBar />
       <Header />
       
       <main>

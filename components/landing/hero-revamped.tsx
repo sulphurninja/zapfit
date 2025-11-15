@@ -7,7 +7,7 @@ import { motion } from 'framer-motion'
 
 export function HeroRevamped() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-screen -mt-12 flex items-center justify-center overflow-hidden">
       {/* Subtle gradient background */}
       <div className="absolute inset-0 bg-linear-to-b from-background via-background to-muted/30" />
       

@@ -33,12 +33,12 @@ const navigation = {
 
 const contact = {
   sales: {
-    phone: '+91 77108 62007',
-    email: 'sales@gymex.online'
+    phone: '+91 9836630366',
+    email: 'contact@gymz.in'
   },
   support: {
-    phone: '+91 82916 82083',
-    email: 'support@gymex.online'
+    phone: '+91 9836630366',
+    email: 'support@gymz.in'
   },
 }
 
