@@ -40,7 +40,6 @@ const contact = {
     phone: '+91 82916 82083',
     email: 'support@gymex.online'
   },
-  address: 'Swami Vivekanand Road, Jogeshwari West, Mumbai - 400 102'
 }
 
 export function Footer() {
@@ -53,22 +52,14 @@ export function Footer() {
             {/* Brand Column */}
             <div className="lg:col-span-4 space-y-6">
             <Link href="/" className="flex items-center gap-2">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Dumbbell className="h-6 w-6 text-primary" />
-              </div>
-              <span className="text-xl font-bold">GymZ</span>
+             <img src='/logo.png' className='h-12'/>
             </Link>
             <p className="text-muted-foreground leading-relaxed max-w-sm">
               Your fitness operating system. Built by Zapllo. Perfected for gyms.
             </p>
               
               {/* Contact Info */}
-              <div className="space-y-3 text-sm">
-                <div className="flex items-start gap-3">
-                  <MapPin className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                  <span className="text-muted-foreground">{contact.address}</span>
-                </div>
-              </div>
+             
             </div>
 
             {/* Links Columns */}

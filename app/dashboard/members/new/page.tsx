@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,21 +11,77 @@ import { ArrowLeft, Loader2, Save } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 
+interface Plan {
+  _id: string
+  name: string
+  description?: string
+  duration: number
+  durationType: 'days' | 'months' | 'years'
+  amount: number
+  features: string[]
+}
+
 export default function NewMemberPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [plans, setPlans] = useState<Plan[]>([])
+  const [loadingPlans, setLoadingPlans] = useState(true)
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     address: '',
     emergencyContact: '',
+    planId: '',
     planName: '',
     amount: '',
     planDuration: '',
     startDate: new Date().toISOString().split('T')[0],
     paymentMethod: 'cash',
   })
+
+  useEffect(() => {
+    fetchPlans()
+  }, [])
+
+  const fetchPlans = async () => {
+    try {
+      setLoadingPlans(true)
+      const response = await fetch('/api/plans')
+      const data = await response.json()
+      if (data.success) {
+        setPlans(data.plans)
+      }
+    } catch (error) {
+      console.error('Fetch plans error:', error)
+      toast.error('Failed to load plans')
+    } finally {
+      setLoadingPlans(false)
+    }
+  }
+
+  const handlePlanChange = (planId: string) => {
+    const plan = plans.find(p => p._id === planId)
+    if (plan) {
+      setSelectedPlan(plan)
+      // Calculate duration in days
+      let durationInDays = plan.duration
+      if (plan.durationType === 'months') {
+        durationInDays = plan.duration * 30
+      } else if (plan.durationType === 'years') {
+        durationInDays = plan.duration * 365
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        planId: plan._id,
+        planName: plan.name,
+        amount: plan.amount.toString(),
+        planDuration: durationInDays.toString(),
+      }))
+    }
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -37,6 +93,16 @@ export default function NewMemberPage() {
     
     if (!formData.name || !formData.email || !formData.phone) {
       toast.error('Please fill in all required fields')
+      return
+    }
+
+    if (!formData.planId && !formData.planName) {
+      toast.error('Please select a plan or enter plan details')
+      return
+    }
+
+    if (!formData.amount || !formData.planDuration) {
+      toast.error('Please ensure plan amount and duration are specified')
       return
     }
 
@@ -54,7 +120,7 @@ export default function NewMemberPage() {
         toast.success('Member added successfully!')
         router.push('/dashboard/members')
       } else {
-        toast.error(data.error || 'Failed to add member')
+        toast.error(data.message || data.error || 'Failed to add member')
       }
     } catch (error) {
       console.error('Add member error:', error)
@@ -168,32 +234,52 @@ export default function NewMemberPage() {
                 <CardDescription>Plan and subscription information</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-4">
-                    <Label htmlFor="planName">Plan Name *</Label>
-                    <Input
-                      id="planName"
-                      name="planName"
-                      placeholder="e.g., Monthly, Quarterly"
-                      value={formData.planName}
-                      onChange={handleChange}
-                      required
+                <div className="space-y-4">
+                  <Label htmlFor="planId">Select Plan *</Label>
+                  {loadingPlans ? (
+                    <div className="flex items-center justify-center p-4 border rounded-md">
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      <span className="text-sm text-muted-foreground">Loading plans...</span>
+                    </div>
+                  ) : plans.length === 0 ? (
+                    <div className="p-4 border rounded-md text-center">
+                      <p className="text-sm text-muted-foreground mb-2">No plans available</p>
+                      <Link href="/dashboard/plans">
+                        <Button type="button" size="sm" variant="outline">
+                          Create Plan First
+                        </Button>
+                      </Link>
+                    </div>
+                  ) : (
+                    <Select
+                      value={formData.planId}
+                      onValueChange={handlePlanChange}
                       disabled={loading}
-                    />
-                  </div>
-                  <div className="space-y-4">
-                    <Label htmlFor="planDuration">Duration (days) *</Label>
-                    <Input
-                      id="planDuration"
-                      name="planDuration"
-                      type="number"
-                      placeholder="30, 90, 180, 365"
-                      value={formData.planDuration}
-                      onChange={handleChange}
-                      required
-                      disabled={loading}
-                    />
-                  </div>
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a membership plan" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {plans.map((plan) => (
+                          <SelectItem key={plan._id} value={plan._id}>
+                            {plan.name} - ₹{plan.amount} ({plan.duration} {plan.durationType})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  {selectedPlan && (
+                    <div className="p-3 bg-primary/5 border border-primary/20 rounded-md">
+                      <p className="text-sm font-medium">{selectedPlan.name}</p>
+                      {selectedPlan.description && (
+                        <p className="text-xs text-muted-foreground mt-1">{selectedPlan.description}</p>
+                      )}
+                      <div className="flex gap-4 mt-2 text-xs">
+                        <span>Duration: {selectedPlan.duration} {selectedPlan.durationType}</span>
+                        <span>Amount: ₹{selectedPlan.amount}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -207,21 +293,41 @@ export default function NewMemberPage() {
                       value={formData.amount}
                       onChange={handleChange}
                       required
-                      disabled={loading}
+                      disabled={loading || !!selectedPlan}
                     />
+                    {selectedPlan && (
+                      <p className="text-xs text-muted-foreground">Auto-filled from selected plan</p>
+                    )}
                   </div>
                   <div className="space-y-4">
-                    <Label htmlFor="startDate">Start Date *</Label>
+                    <Label htmlFor="planDuration">Duration (days) *</Label>
                     <Input
-                      id="startDate"
-                      name="startDate"
-                      type="date"
-                      value={formData.startDate}
+                      id="planDuration"
+                      name="planDuration"
+                      type="number"
+                      placeholder="30"
+                      value={formData.planDuration}
                       onChange={handleChange}
                       required
-                      disabled={loading}
+                      disabled={loading || !!selectedPlan}
                     />
+                    {selectedPlan && (
+                      <p className="text-xs text-muted-foreground">Auto-calculated from plan</p>
+                    )}
                   </div>
+                </div>
+
+                <div className="space-y-4">
+                  <Label htmlFor="startDate">Start Date *</Label>
+                  <Input
+                    id="startDate"
+                    name="startDate"
+                    type="date"
+                    value={formData.startDate}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
                 </div>
 
                 <div className="space-y-4">
@@ -257,11 +363,22 @@ export default function NewMemberPage() {
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Member Name:</span>
-                    <span className="font-medium">{formData.name || '-'}</span>
+                    <span className="font-medium truncate ml-2">{formData.name || '-'}</span>
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-muted-foreground">Email:</span>
+                    <span className="font-medium text-xs truncate ml-2">{formData.email || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Phone:</span>
+                    <span className="font-medium">{formData.phone || '-'}</span>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t space-y-3 text-sm">
+                  <div className="flex justify-between">
                     <span className="text-muted-foreground">Plan:</span>
-                    <span className="font-medium">{formData.planName || '-'}</span>
+                    <span className="font-medium">{selectedPlan ? selectedPlan.name : (formData.planName || '-')}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Duration:</span>
@@ -269,7 +386,7 @@ export default function NewMemberPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Amount:</span>
-                    <span className="font-medium">{formData.amount ? `₹${formData.amount}` : '-'}</span>
+                    <span className="font-medium text-primary">{formData.amount ? `₹${formData.amount}` : '-'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Payment:</span>
@@ -278,7 +395,7 @@ export default function NewMemberPage() {
                 </div>
 
                 <div className="pt-4 border-t space-y-3">
-                  <Button type="submit" className="w-full" disabled={loading}>
+                  <Button type="submit" className="w-full" disabled={loading || loadingPlans}>
                     {loading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -299,7 +416,7 @@ export default function NewMemberPage() {
                 </div>
 
                 <p className="text-xs text-muted-foreground">
-                  * Required fields must be filled
+                  * All required fields must be filled
                 </p>
               </CardContent>
             </Card>

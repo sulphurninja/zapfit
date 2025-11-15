@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import Image from 'next/image'
 import {
   LayoutDashboard,
   Users,
@@ -115,7 +116,7 @@ export function Sidebar({ onCollapse }: SidebarProps = {}) {
         size="sm"
         onClick={handleToggle}
         className={cn(
-          'absolute top-6 -right-3 h-6 w-6 rounded-full bg-background border border-border shadow-md hover:shadow-lg transition-all p-0 z-[9999]',
+          'absolute top-6 -right-3 h-6 w-6 rounded-full bg-background border border-border shadow-md hover:shadow-lg transition-all p-0 z-9999',
           collapsed && 'rotate-180'
         )}
       >
@@ -125,26 +126,43 @@ export function Sidebar({ onCollapse }: SidebarProps = {}) {
       <div className="flex grow flex-col gap-y-6 overflow-y-auto bg-card/50 backdrop-blur-xl border-r border-border/50 px-4 pb-6 scrollbar-hide">
         {/* Logo */}
         <div className="flex h-20 shrink-0 items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-3 group">
-            <motion.div
-              className="p-2 bg-primary/10 rounded-xl group-hover:bg-primary/20 transition-colors"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Dumbbell className="h-6 w-6 text-primary" />
-            </motion.div>
-            <AnimatePresence>
-              {!collapsed && (
+          <Link href="/dashboard" className="flex justify-center items-center group">
+            <AnimatePresence mode="wait">
+              {collapsed ? (
                 <motion.div
-                  initial={{ opacity: 0, width: 0 }}
-                  animate={{ opacity: 1, width: 'auto' }}
-                  exit={{ opacity: 0, width: 0 }}
+                  key="logo2"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
                   transition={{ duration: 0.2 }}
-                  className="overflow-hidden"
+                  className="relative w-10 h-10"
                 >
-                  <h1 className="text-xl font-bold whitespace-nowrap">GymZ</h1>
-                  <p className="text-xs text-muted-foreground whitespace-nowrap">Fitness OS</p>
+                  <Image
+                    src="/logo2.png"
+                    alt="GymZ"
+                    fill
+                    className="object-contain"
+                  />
                 </motion.div>
+              ) : (
+                <div className='flex justify-center items-center'>
+                <motion.div
+                  key="logo"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.2 }}
+                  className="relative w-32 h-10"
+                >
+                  <Image
+                    src="/logo.png"
+                    alt="GymZ"
+                    fill
+                    className="object-contain"
+                  />
+                
+                </motion.div>
+                </div>
               )}
             </AnimatePresence>
           </Link>

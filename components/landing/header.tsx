@@ -39,10 +39,7 @@ export function Header() {
         <div className="flex h-16 sm:h-20 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-              <Dumbbell className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-            </div>
-            <span className="text-lg sm:text-xl font-bold">GymZ</span>
+          <img src='/logo.png' className='h-12' />
           </Link>
 
           {/* Desktop Navigation */}

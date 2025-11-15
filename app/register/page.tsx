@@ -84,10 +84,7 @@ export default function RegisterPage() {
           >
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="p-3 bg-primary/10 rounded-xl group-hover:bg-primary/20 transition-colors">
-                <Dumbbell className="h-8 w-8 text-primary" />
-              </div>
-              <span className="text-3xl font-bold">GymZ</span>
+             <img src='/logo.png' className='h-12'/>
             </Link>
 
             {/* Headline */}

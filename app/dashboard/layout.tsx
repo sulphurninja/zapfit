@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import { verifyToken } from '@/lib/jwt'
 import { DashboardWrapper } from '@/components/dashboard/dashboard-wrapper'
 import { Toaster } from 'sonner'
+import connectDB from '@/lib/mongodb'
+import User from '@/models/User'
 
 async function getCurrentUser() {
   const cookieStore = await cookies()
@@ -13,7 +15,26 @@ async function getCurrentUser() {
   }
 
   const decoded = verifyToken(token)
-  return decoded
+  if (!decoded) {
+    return null
+  }
+
+  try {
+    await connectDB()
+    const user = await User.findById(decoded.userId).select('name email role')
+    if (!user) {
+      return null
+    }
+
+    return {
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    }
+  } catch (error) {
+    console.error('Error fetching user:', error)
+    return null
+  }
 }
 
 export default async function DashboardLayout({
@@ -30,13 +51,7 @@ export default async function DashboardLayout({
   return (
     <>
       <Toaster position="top-right" richColors />
-      <DashboardWrapper
-        user={{
-          name: user.email.split('@')[0],
-          email: user.email,
-          role: user.role,
-        }}
-      >
+      <DashboardWrapper user={user}>
         {children}
       </DashboardWrapper>
     </>
