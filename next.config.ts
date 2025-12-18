@@ -8,6 +8,12 @@ const nextConfig: NextConfig = {
   eslint:{
     ignoreDuringBuilds: true,
   },
+  experimental: {
+    // Disable Turbopack for builds
+    turbo: undefined,
+  },
+  // Use SWC for CSS minification instead of lightningcss
+  swcMinify: true,
 };
 
 export default nextConfig;
